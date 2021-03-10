@@ -29,14 +29,14 @@ parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
 parser.add_argument('--clip', type=float, default=5.0, help='gradient clipping')
 parser.add_argument('--dropout', type=float, default=0.5, help='dropout keep_prob')
 parser.add_argument('--update_embedding', type=str2bool, default=True, help='update embedding during training')
-parser.add_argument('--pretrain_embedding', type=str, default='random', help='use pretrained char embedding or init it randomly')
+parser.add_argument('--pretrain_embedding', type=str, default='random',
+                    help='use pretrained char embedding or init it randomly')
 parser.add_argument('--embedding_dim', type=int, default=300, help='random init char embedding_dim')
 parser.add_argument('--shuffle', type=str2bool, default=True, help='shuffle training data before each epoch')
 # parser.add_argument('--mode', type=str, default='demo', help='train/test/demo')
 parser.add_argument('--mode', type=str, default='demo', help='train/test/demo')
 parser.add_argument('--demo_model', type=str, default='1525876314', help='model for test and demo')
 args = parser.parse_args()
-
 
 ## get char embeddings
 word2id = read_dictionary(os.path.join('.', args.train_data, 'word2id.pkl'))
@@ -50,7 +50,6 @@ else:
     args.pos_dim = args.embedding_dim * 2
     pos_embeddings = random_pos_embedding(args.pos_dim)
 
-
 ## read corpus and get training data
 if args.mode != 'demo':
     train_path = os.path.join('.', args.train_data, 'train_data')
@@ -59,11 +58,10 @@ if args.mode != 'demo':
     test_data = read_corpus(test_path)
     test_size = len(test_data)
 
-
 ## paths setting
 paths = {}
 timestamp = str(int(time.time())) if args.mode == 'train' else args.demo_model
-output_path = os.path.join('.', args.train_data+"_save", timestamp)
+output_path = os.path.join('.', args.train_data + "_save", timestamp)
 if not os.path.exists(output_path): os.makedirs(output_path)
 summary_path = os.path.join(output_path, "summaries")
 paths['summary_path'] = summary_path
@@ -78,7 +76,6 @@ if not os.path.exists(result_path): os.makedirs(result_path)
 log_path = os.path.join(result_path, "log.txt")
 paths['log_path'] = log_path
 get_logger(log_path).info(str(args))
-
 
 ## training model
 if args.mode == 'train':
@@ -109,7 +106,7 @@ elif args.mode == 'demo':
     with tf.Session(config=config) as sess:
         print('============= demo =============')
         saver.restore(sess, ckpt_file)
-        while(1):
+        while (1):
             pos_ = []
             print('请输入您需要识别的语句 : （回车键退出）')
             demo_sent = input()
@@ -120,6 +117,7 @@ elif args.mode == 'demo':
                 demo_sent = list(demo_sent.strip())
                 sentence = "".join(demo_sent)
                 from jieba import posseg as pseg
+
                 POS = pseg.cut(sentence)
                 for w in POS:
                     for i in range(len(w.word)):
