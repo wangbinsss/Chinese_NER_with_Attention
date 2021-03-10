@@ -23,4 +23,3 @@ def conlleval(label_predict, label_path, metric_path):
     with open(metric_path) as fr:
         metrics = [line.strip() for line in fr]
     return metrics
-    

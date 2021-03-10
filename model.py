@@ -222,6 +222,7 @@ class BiLSTM_CRF_CNN_Attention(object):
         """
         num_batches = (len(train) + self.batch_size - 1) // self.batch_size
         start_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        # vocab: word2id, tag2label: tag2id,
         batches = batch_yield(train, self.batch_size, self.vocab, self.tag2label, self.pos2id, shuffle=self.shuffle)
         for step, (seqs, labels, poss) in enumerate(batches):
             sys.stdout.write(' processing: {} batch / {} batches.'.format(step + 1, num_batches) + '\r')

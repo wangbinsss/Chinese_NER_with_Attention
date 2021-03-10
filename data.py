@@ -10,7 +10,8 @@ tag2label = {"O": 0,
              }
 pos2id = {
     "n": 1, "ns": 2, "nt": 3, "nr": 4,
-    "ng": 5, "nrfg": 6, "nz": 7, "nrt": 8, "UNK": 0
+    "ng": 5, "nrfg": 6, "nz": 7, "nrt": 8, "UNK": 0,
+    "r": 9, "v": 10, "m": 11, "x": 11
     }
 
 def read_corpus(corpus_path):
@@ -56,6 +57,7 @@ def vocab_build(vocab_path, corpus_path, min_count):
             else:
                 word2id[word][1] += 1
     low_freq_words = []
+    # 低频词
     for word, [word_id, word_freq] in word2id.items():
         if word_freq < min_count and word != '<NUM>' and word != '<ENG>':
             low_freq_words.append(word)

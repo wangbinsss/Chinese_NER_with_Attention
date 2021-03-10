@@ -17,12 +17,12 @@ BLAC 特殊加入层：Attention layer，将词性嵌入向量和 BI-LSTM 的隐
 ### 数据集说明
 weibo 数据集是根据文献 [1]  中的语料修改而来。共有 15114 个命名实体。  
 ### 训练命令
-python main.py --mode=train
+python3 main.py --mode=train
 ### 测试命令
-python main.py --mode=test --demo_model=15xxxxxxx  
+python3 main.py --mode=test --demo_model=15xxxxxxx  
 其中，demo_model 参数将其设置为你在训练完成后保存模型得到的文件夹。
 ### 测试例句命令
-python main.py --mode=demo --demo_model=15xxxxxxxx
+python3 main.py --mode=demo --demo_model=1615376720
 
 
 ### Reference
@@ -35,7 +35,7 @@ python main.py --mode=demo --demo_model=15xxxxxxxx
 random fields for named entity recognition[C]// International Conference on Computational
 Linguistics and the, Meeting of the Association for Computational Linguistics. Association for
 Computational Linguistics, 2006:465-472.  
-[6] Mccallum A, Li W. Early results for named entity recognition with conditional random fields,
+[6] Mccallum A, Li W. Early results for named entity renition with conditional random fields,
 feature induction and web-enhanced lexicons[C]// Conference on Natural Language Learning at
 Hlt-Naacl. Association for Computational Linguistics, 2003:188-191.  
 [7] Kazama J. Exploiting Wikipedia as external knowledge for named entity recognition[C]// Proc.
