@@ -5,13 +5,13 @@ from utils import str2bool, get_logger, get_entity
 from data import read_corpus, read_dictionary, tag2label, random_embedding, pos2id, random_pos_embedding, get_embedding
 
 # Session configuration
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # default: 0
-config = tf.ConfigProto(device_count={'CPU': 12})
-
-# os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # default: 0
-# config = tf.ConfigProto()
-# config.gpu_options.allow_growth = True
+# config = tf.ConfigProto(device_count={'CPU': 12})
+
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # default: 0
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
 # config.gpu_options.per_process_gpu_memory_fraction = 0.3  # need ~700MB GPU memory
 
 
@@ -119,6 +119,7 @@ elif args.mode == 'demo':
             else:
                 demo_sent = list(demo_sent.strip())
                 sentence = "".join(demo_sent)
+                from jieba import posseg as pseg
                 POS = pseg.cut(sentence)
                 for w in POS:
                     for i in range(len(w.word)):
