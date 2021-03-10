@@ -7,6 +7,7 @@ from data import pad_sequences, batch_yield
 from utils import get_logger
 from eval import conlleval
 
+
 class BiLSTM_CRF_CNN_Attention(object):
     def __init__(self, args, embeddings, pos_embeddings, tag2label, pos2id, vocab, paths, config):
         self.batch_size = args.batch_size
@@ -86,25 +87,25 @@ class BiLSTM_CRF_CNN_Attention(object):
     def attention_layer(self):
         with tf.variable_scope("atten"):
             attention_W = tf.get_variable(name="attention_W",
-                                shape=[2 * self.hidden_dim, self.hidden_dim * 2],
-                                initializer=tf.contrib.layers.xavier_initializer(),
-                                dtype=tf.float32)
+                                          shape=[2 * self.hidden_dim, self.hidden_dim * 2],
+                                          initializer=tf.contrib.layers.xavier_initializer(),
+                                          dtype=tf.float32)
             attention_V = tf.get_variable(name="attention_V", shape=[2 * self.hidden_dim, 1],
-                                initializer=tf.contrib.layers.xavier_initializer(),
-                                dtype=tf.float32)
+                                          initializer=tf.contrib.layers.xavier_initializer(),
+                                          dtype=tf.float32)
             attention_U = tf.get_variable(name="attention_U",
                                           shape=[2 * self.hidden_dim, self.hidden_dim * 2],
                                           initializer=tf.contrib.layers.xavier_initializer(),
                                           dtype=tf.float32)
-            self.pos_embeddings = tf.reshape(self.pos_embeddings, [-1, 2*self.hidden_dim])
+            self.pos_embeddings = tf.reshape(self.pos_embeddings, [-1, 2 * self.hidden_dim])
             s = tf.shape(self.output)
-            self.output = tf.reshape(self.output, [-1, 2*self.hidden_dim])
+            self.output = tf.reshape(self.output, [-1, 2 * self.hidden_dim])
             atten_hidden = tf.tanh(
                 tf.add(tf.matmul(self.pos_embeddings, attention_W), tf.matmul(self.output, attention_U)))
             e_i = tf.matmul(atten_hidden, attention_V)
             e_i = tf.reshape(e_i, [-1, s[1], 1])
             alpha_i = tf.nn.softmax(e_i)
-            self.output = tf.reshape(self.output, [-1, s[1], 2*self.hidden_dim])
+            self.output = tf.reshape(self.output, [-1, s[1], 2 * self.hidden_dim])
             c_i = tf.multiply(alpha_i, self.output)
             self.new_output = tf.concat([self.output, c_i], axis=-1)
 
@@ -118,15 +119,15 @@ class BiLSTM_CRF_CNN_Attention(object):
                                 initializer=tf.zeros_initializer(),
                                 dtype=tf.float32)
             s = tf.shape(self.new_output)
-            self.new_output = tf.reshape(self.new_output, [-1, 4*self.hidden_dim])
+            self.new_output = tf.reshape(self.new_output, [-1, 4 * self.hidden_dim])
             self.pred = tf.matmul(self.new_output, W) + b
             self.logits = tf.reshape(self.pred, [-1, s[1], self.num_tags])
 
     def loss_op(self):
         if self.CRF:
             log_likelihood, self.transition_params = crf_log_likelihood(inputs=self.logits,
-                                                                   tag_indices=self.labels,
-                                                                   sequence_lengths=self.sequence_lengths)
+                                                                        tag_indices=self.labels,
+                                                                        sequence_lengths=self.sequence_lengths)
             self.loss = -tf.reduce_mean(log_likelihood)
         else:
             losses = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.logits,
@@ -200,7 +201,8 @@ class BiLSTM_CRF_CNN_Attention(object):
         :return:
         """
         label_list = []
-        for seqs, labels, poss in batch_yield(sent, self.batch_size, self.vocab, self.tag2label, self.pos2id, shuffle=False):
+        for seqs, labels, poss in batch_yield(sent, self.batch_size, self.vocab, self.tag2label, self.pos2id,
+                                              shuffle=False):
             label_list_, _ = self.predict_one_batch(sess, poss, seqs)
             label_list.extend(label_list_)
         label2tag = {}
@@ -270,7 +272,8 @@ class BiLSTM_CRF_CNN_Attention(object):
         :return:
         """
         label_list, seq_len_list = [], []
-        for seqs, labels, poss in batch_yield(dev, self.batch_size, self.vocab, self.tag2label, self.pos2id, shuffle=False):
+        for seqs, labels, poss in batch_yield(dev, self.batch_size, self.vocab, self.tag2label, self.pos2id,
+                                              shuffle=False):
             label_list_, seq_len_list_ = self.predict_one_batch(sess, poss, seqs)
             label_list.extend(label_list_)
             seq_len_list.extend(seq_len_list_)
@@ -317,7 +320,7 @@ class BiLSTM_CRF_CNN_Attention(object):
             for i in range(len(sent)):
                 sent_res.append([sent[i], tag[i], tag_[i]])
             model_predict.append(sent_res)
-        epoch_num = str(epoch+1) if epoch != None else 'test'
+        epoch_num = str(epoch + 1) if epoch != None else 'test'
         label_path = os.path.join(self.result_path, 'label_' + epoch_num)
         metric_path = os.path.join(self.result_path, 'result_metric_' + epoch_num)
         for _ in conlleval(model_predict, label_path, metric_path):
