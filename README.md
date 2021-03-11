@@ -19,7 +19,7 @@ weibo 数据集是根据文献 [1]  中的语料修改而来。共有 15114 个�
 ### 训练命令
 python3 main.py --mode=train
 ### 测试命令
-python3 main.py --mode=test --demo_model=15xxxxxxx  
+python3 main.py --mode=test --demo_model=1615460960  
 其中，demo_model 参数将其设置为你在训练完成后保存模型得到的文件夹。
 ### 测试例句命令
 python3 main.py --mode=demo --demo_model=1615376720

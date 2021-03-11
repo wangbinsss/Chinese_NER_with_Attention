@@ -198,3 +198,10 @@ def get_embedding(path):
     file.close()
     print("结果词数量获得的是："+str(len(word2id)))
     return embeddings, word2id, embedding_dim
+
+
+if __name__ == '__main__':
+    vocab_path = './data_path/data.pk'
+    corpus_path = './data_path/data.txt'
+    min_count = 0
+    vocab_build(vocab_path, corpus_path, min_count)
