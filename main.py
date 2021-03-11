@@ -15,7 +15,6 @@ config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
 config.gpu_options.per_process_gpu_memory_fraction = 0.3  # need ~700MB GPU memory
 
-
 # hyperparameters
 parser = argparse.ArgumentParser(description='BiLSTM-CRF for Chinese NER task')
 parser.add_argument('--train_data', type=str, default='data_path', help='train data source')
@@ -126,6 +125,9 @@ elif args.mode == 'demo':
                 POS = pseg.cut(sentence)
                 for w in POS:
                     for i in range(len(w.word)):
+                        w_flag = w.flag
+                        if w_flag not in ["n", "ns", "nt", "nr", "ng", "nrfg", "nz", "nrt"]:
+                            w_flag = "UNK"
                         pos_.append(w.flag)
                 demo_data = [(demo_sent, ['O'] * len(demo_sent), pos_)]
                 tag = model.demo_one(sess, demo_data)

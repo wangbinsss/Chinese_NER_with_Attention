@@ -1,7 +1,7 @@
 import sys, pickle, os, random
 import numpy as np
 
-## tags, BIO
+# tags, BIO
 tag2label = {"O": 0,
              "B-PER": 1, "I-PER": 2,
              "B-LOC": 3, "I-LOC": 4,
@@ -13,9 +13,9 @@ id2tag = {
 }
 pos2id = {
     "n": 1, "ns": 2, "nt": 3, "nr": 4,
-    "ng": 5, "nrfg": 6, "nz": 7, "nrt": 8, "UNK": 0,
-    "r": 9, "v": 10, "m": 11, "x": 11
-    }
+    "ng": 5, "nrfg": 6, "nz": 7, "nrt": 8, "UNK": 0
+}
+
 
 def read_corpus(corpus_path):
     """
@@ -39,6 +39,7 @@ def read_corpus(corpus_path):
 
     return data
 
+
 def vocab_build(vocab_path, corpus_path, min_count):
     """
 
@@ -53,10 +54,10 @@ def vocab_build(vocab_path, corpus_path, min_count):
         for word in sent_:
             if word.isdigit():
                 word = '<NUM>'
-            elif ('\u0041' <= word <='\u005a') or ('\u0061' <= word <='\u007a'):
+            elif ('\u0041' <= word <= '\u005a') or ('\u0061' <= word <= '\u007a'):
                 word = '<ENG>'
             if word not in word2id:
-                word2id[word] = [len(word2id)+1, 1]
+                word2id[word] = [len(word2id) + 1, 1]
             else:
                 word2id[word][1] += 1
     low_freq_words = []
@@ -122,10 +123,12 @@ def random_embedding(vocab, embedding_dim):
     embedding_mat = np.float32(embedding_mat)
     return embedding_mat
 
+
 def random_pos_embedding(pos_dim):
     pos_embedding = np.random.uniform(-0.25, 0.25, (len(pos2id), pos_dim))
     pos_embedding = np.float32(pos_embedding)
     return pos_embedding
+
 
 def pad_sequences(sequences, pad_mark=0):
     """
@@ -180,7 +183,7 @@ def get_embedding(path):
     line = file.readline()
     [word_num, embedding_dim] = line.strip().split()
     embedding_dim = int(embedding_dim)
-    print("词数量应该是 "+word_num)
+    print("词数量应该是 " + word_num)
     lines = file.readlines()
     for line in lines:
         line_list = line.strip().split()
@@ -196,7 +199,7 @@ def get_embedding(path):
         embeddings.append(line_list[1:])
         id = id + 1
     file.close()
-    print("结果词数量获得的是："+str(len(word2id)))
+    print("结果词数量获得的是：" + str(len(word2id)))
     return embeddings, word2id, embedding_dim
 
 
