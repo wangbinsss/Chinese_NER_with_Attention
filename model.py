@@ -35,6 +35,9 @@ class Att_BiLSTM_CRF(object):
         self.logger = get_logger(paths['log_path'])
         self.result_path = paths['result_path']
         self.config = config
+        self.id2tag = {
+            v: k for k, v in self.tag2label.items()
+        }
 
     def build_graph(self):
         self.add_placeholders()
@@ -254,7 +257,7 @@ class Att_BiLSTM_CRF(object):
                                                   transition_params_)
                 all_list = np.concatenate((label_list, pred_list), axis=0)
                 all_list = np.unique(all_list)
-                target_names = [i for i in self.tag2label]
+                target_names = [self.id2tag[i] for i in all_list]
                 acc = accuracy_score(label_list, pred_list)
                 print(
                     'epoch {}, global_step {}, loss: {:.4}, accuracy: {:.4}  '.format(epoch + 1, step_num_ + 1,
