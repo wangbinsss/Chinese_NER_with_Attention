@@ -153,7 +153,7 @@ def batch_yield(data, batch_size, vocab, tag2label, pos2id, shuffle=False):
     """
     if shuffle:
         random.shuffle(data)
-    seqs, labels, poss = [], [], []
+    seqs, labels, poss, sentence_legth = [], [], [], []
     for (sent_, tag_, pos_) in data:
         sent_ = sentence2id(sent_, vocab)
         label_ = [tag2label[tag] for tag in tag_]
@@ -161,11 +161,12 @@ def batch_yield(data, batch_size, vocab, tag2label, pos2id, shuffle=False):
         seqs.append(sent_)
         labels.append(label_)
         poss.append(pos)
+        sentence_legth.append(len(sent_))
         if len(seqs) == batch_size:
-            yield seqs, labels, poss
-            seqs, labels, poss = [], [], []
+            yield seqs, labels, poss, sentence_legth
+            seqs, labels, poss, sentence_legth = [], [], [], []
     if len(seqs) != 0:
-        yield seqs, labels, poss
+        yield seqs, labels, poss, sentence_legth
 
 
 def get_embedding(path):

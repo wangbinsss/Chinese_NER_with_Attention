@@ -1,5 +1,7 @@
 import time, sys, os
 import tensorflow as tf
+import numpy as np
+from sklearn.metrics import classification_report, accuracy_score
 from tensorflow.contrib.rnn import LSTMCell
 from tensorflow.contrib.crf import crf_log_likelihood
 from tensorflow.contrib.crf import viterbi_decode
@@ -8,7 +10,7 @@ from utils import get_logger
 from eval import conlleval
 
 
-class BiLSTM_CRF_CNN_Attention(object):
+class Att_BiLSTM_CRF(object):
     def __init__(self, args, embeddings, pos_embeddings, tag2label, pos2id, vocab, paths, config):
         self.batch_size = args.batch_size
         self.epoch_num = args.epoch
@@ -90,7 +92,8 @@ class BiLSTM_CRF_CNN_Attention(object):
                                           shape=[2 * self.hidden_dim, self.hidden_dim * 2],
                                           initializer=tf.contrib.layers.xavier_initializer(),
                                           dtype=tf.float32)
-            attention_V = tf.get_variable(name="attention_V", shape=[2 * self.hidden_dim, 1],
+            attention_V = tf.get_variable(name="attention_V",
+                                          shape=[2 * self.hidden_dim, 1],
                                           initializer=tf.contrib.layers.xavier_initializer(),
                                           dtype=tf.float32)
             attention_U = tf.get_variable(name="attention_U",
@@ -201,7 +204,7 @@ class BiLSTM_CRF_CNN_Attention(object):
         :return:
         """
         label_list = []
-        for seqs, labels, poss in batch_yield(sent, self.batch_size, self.vocab, self.tag2label, self.pos2id,
+        for seqs, labels, poss, _ in batch_yield(sent, self.batch_size, self.vocab, self.tag2label, self.pos2id,
                                               shuffle=False):
             label_list_, _ = self.predict_one_batch(sess, poss, seqs)
             label_list.extend(label_list_)
@@ -226,7 +229,7 @@ class BiLSTM_CRF_CNN_Attention(object):
         start_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         # vocab: word2id, tag2label: tag2id,
         batches = batch_yield(train, self.batch_size, self.vocab, self.tag2label, self.pos2id, shuffle=self.shuffle)
-        for step, (seqs, labels, poss) in enumerate(batches):
+        for step, (seqs, labels, poss, sentence_legth) in enumerate(batches):
             sys.stdout.write(' processing: {} batch / {} batches.'.format(step + 1, num_batches) + '\r')
             step_num = epoch * num_batches + step + 1
             feed_dict, _ = self.get_feed_dict(seqs, poss, labels, self.lr, self.dropout_keep_prob)
@@ -239,9 +242,24 @@ class BiLSTM_CRF_CNN_Attention(object):
             self.file_writer.add_summary(summary, step_num)
             if step + 1 == num_batches:
                 saver.save(sess, self.model_path, global_step=step_num)
-        self.logger.info('===========validation / test===========')
-        label_list_dev, seq_len_list_dev = self.dev_one_epoch(sess, dev)
-        self.evaluate(label_list_dev, seq_len_list_dev, dev, epoch)
+
+            if step_num_ % 50 == 0:
+                self.logger.info('===========validation / test===========')
+                label_list_dev, seq_len_list_dev = self.dev_one_epoch(sess, dev)
+                # self.evaluate(label_list_dev, seq_len_list_dev, dev, epoch)
+
+                logits_, transition_params_ = sess.run([self.logits, self.transition_params],
+                                                       feed_dict=feed_dict)
+                pred_list, label_list = self.make_mask(logits_, labels, sentence_legth, True,
+                                                  transition_params_)
+                all_list = np.concatenate((label_list, pred_list), axis=0)
+                all_list = np.unique(all_list)
+                target_names = [i for i in self.tag2label]
+                acc = accuracy_score(label_list, pred_list)
+                print(
+                    'epoch {}, global_step {}, loss: {:.4}, accuracy: {:.4}  '.format(epoch + 1, step_num_ + 1,
+                                                                                      loss_train, acc))
+                print(classification_report(label_list, pred_list, target_names=target_names, digits=4))
 
     def get_feed_dict(self, seqs, poss, labels=None, lr=None, dropout=None):
         """
@@ -272,7 +290,7 @@ class BiLSTM_CRF_CNN_Attention(object):
         :return:
         """
         label_list, seq_len_list = [], []
-        for seqs, labels, poss in batch_yield(dev, self.batch_size, self.vocab, self.tag2label, self.pos2id,
+        for seqs, labels, poss, _ in batch_yield(dev, self.batch_size, self.vocab, self.tag2label, self.pos2id,
                                               shuffle=False):
             label_list_, seq_len_list_ = self.predict_one_batch(sess, poss, seqs)
             label_list.extend(label_list_)
@@ -295,6 +313,23 @@ class BiLSTM_CRF_CNN_Attention(object):
                 viterbi_seq, _ = viterbi_decode(logit[:seq_len], transition_params)
                 label_list.append(viterbi_seq)
             return label_list, seq_len_list
+
+    # 获取真实序列、标签长度。
+    def make_mask(self, logits_, labels_, sentence_legth, is_CRF=False, transition_params_=None):
+        pred_list = []
+        label_list = []
+        for log, lab, seq_len in zip(logits_, labels_, sentence_legth):
+            if len(log[:seq_len]) == 0:
+                continue
+            # if is_CRF:  # 修改前
+            # if is_CRF and len(log[:seq_len]) != 0:  # 修改后
+            if is_CRF:  # 修改前
+                viterbi_seq, _ = viterbi_decode(log[:seq_len], transition_params_)
+            else:
+                viterbi_seq = log[:seq_len]
+            pred_list.extend(viterbi_seq)
+            label_list.extend(lab[:seq_len])
+        return pred_list, label_list
 
     def evaluate(self, label_list, seq_len_list, data, epoch=None):
         """
