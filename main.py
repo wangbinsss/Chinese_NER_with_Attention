@@ -131,5 +131,6 @@ elif args.mode == 'demo':
                         pos_.append(w_flag)
                 demo_data = [(demo_sent, ['O'] * len(demo_sent), pos_)]
                 tag = model.demo_one(sess, demo_data)
+                print(tag, demo_sent)
                 PER, LOC, ORG = get_entity(tag, demo_sent)
                 print('PER: {}\nLOC: {}\nORG: {}'.format(PER, LOC, ORG))
