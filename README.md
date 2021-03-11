@@ -22,7 +22,7 @@ python3 main.py --mode=train
 python3 main.py --mode=test --demo_model=1615460960  
 其中，demo_model 参数将其设置为你在训练完成后保存模型得到的文件夹。
 ### 测试例句命令
-python3 main.py --mode=demo --demo_model=1615376720
+python3 main.py --mode=demo --demo_model=1615470674
 
 
 ### Reference

@@ -128,7 +128,7 @@ elif args.mode == 'demo':
                         w_flag = w.flag
                         if w_flag not in ["n", "ns", "nt", "nr", "ng", "nrfg", "nz", "nrt"]:
                             w_flag = "UNK"
-                        pos_.append(w.flag)
+                        pos_.append(w_flag)
                 demo_data = [(demo_sent, ['O'] * len(demo_sent), pos_)]
                 tag = model.demo_one(sess, demo_data)
                 PER, LOC, ORG = get_entity(tag, demo_sent)
