@@ -178,7 +178,7 @@ class Att_BiLSTM_CRF(object):
         self.merged = tf.summary.merge_all()
         self.file_writer = tf.summary.FileWriter(self.summary_path, sess.graph)
 
-    def train(self, train, dev):
+    def train(self, train, test):
         """
         :param train:
         :param dev:
@@ -189,7 +189,7 @@ class Att_BiLSTM_CRF(object):
             sess.run(self.init_op)
             self.add_summary(sess)
             for epoch in range(self.epoch_num):
-                self.run_one_epoch(sess, train, dev, epoch, saver)
+                self.run_one_epoch(sess, train, test, epoch, saver)
 
     def test(self, test):
         saver = tf.train.Saver()
@@ -218,7 +218,7 @@ class Att_BiLSTM_CRF(object):
         tag = [label2tag[label] for label in label_list[0]]
         return tag
 
-    def run_one_epoch(self, sess, train, dev, epoch, saver):
+    def run_one_epoch(self, sess, train, test, epoch, saver):
         """
 
         :param sess:
@@ -248,7 +248,7 @@ class Att_BiLSTM_CRF(object):
                 saver.save(sess, self.model_path, global_step=step_num)
 
             if step_num_ % 50 == 0:
-                self.logger.info('===========validation / test===========')
+                self.logger.info('===========Train===========')
                 # label_list_dev, seq_len_list_dev = self.dev_one_epoch(sess, dev)
                 # self.evaluate(label_list_dev, seq_len_list_dev, dev, epoch)
 
@@ -264,6 +264,24 @@ class Att_BiLSTM_CRF(object):
                     'epoch {}, global_step {}, loss: {:.4}, accuracy: {:.4}  '.format(epoch + 1, step_num_ + 1,
                                                                                       loss_train, acc))
                 print(classification_report(label_list, pred_list, target_names=target_names, digits=4))
+                self.logger.info('===========Train===========')
+            if step_num_ % 200 == 0:
+                self.logger.info('===========Validation===========')
+                seqs, labels, poss, sentence_legth = next(
+                    batch_yield(test, self.batch_size, self.vocab, self.tag2label, self.pos2id, shuffle=False))
+
+                feed_dict, _ = self.get_feed_dict(seqs, poss, labels, self.lr, self.dropout_keep_prob)
+                l, logits_, transition_params_ = sess.run([self.loss, self.logits, self.transition_params],
+                                                          feed_dict=feed_dict)
+                # 获取真实序列、标签长度。
+                pred_list, label_list = self.make_mask(logits_, labels, sentence_legth, True, transition_params_)
+                all_list = np.concatenate((label_list, pred_list), axis=0)
+                all_list = np.unique(all_list)
+                target_names = [self.id2tag[i] for i in all_list]
+                acc = accuracy_score(label_list, pred_list)
+                print('test_accuracy: {:.4}  '.format(acc))
+                print(classification_report(label_list, pred_list, target_names=target_names, digits=4))
+                self.logger.info('===========Validation===========')
 
     def dev_one_epoch(self, sess, test):
         """
@@ -271,9 +289,10 @@ class Att_BiLSTM_CRF(object):
         :param dev:
         :return:
         """
+        self.logger.info('===========Test===========')
         # label_list, seq_len_list = [], []
         seqs, labels, poss, sentence_legth = next(
-            batch_yield(test, self.batch_size, self.vocab, self.tag2label, self.pos2id, shuffle=False))
+            batch_yield(test, len(test), self.vocab, self.tag2label, self.pos2id, shuffle=False))
         # label_list_, seq_len_list_ = self.predict_one_batch(sess, poss, seqs)
         # label_list.extend(label_list_)
         # seq_len_list.extend(seq_len_list_)
@@ -290,6 +309,7 @@ class Att_BiLSTM_CRF(object):
         print('test_accuracy: {:.4}  '.format(acc))
         print(classification_report(label_list, pred_list, target_names=target_names, digits=4))
         # return label_list, seq_len_list
+        self.logger.info('===========Test===========')
 
     def predict_one_batch(self, sess, poss, seqs):
         """
