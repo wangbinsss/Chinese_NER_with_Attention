@@ -204,7 +204,7 @@ def get_embedding(path):
 
 
 if __name__ == '__main__':
-    vocab_path = './data_path/data.pk'
-    corpus_path = './data_path/data.txt'
+    vocab_path = './data_path/weibo_data.pk'
+    corpus_path = './data_path/weibo_train_data.txt'
     min_count = 0
     vocab_build(vocab_path, corpus_path, min_count)
