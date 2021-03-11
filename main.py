@@ -95,7 +95,6 @@ elif args.mode == 'test':
     ckpt_file = tf.train.latest_checkpoint(model_path)
     print(ckpt_file)
     paths['model_path'] = ckpt_file
-    print(ckpt_file)
     model = Att_BiLSTM_CRF(args, embeddings, pos_embeddings, tag2label, pos2id, word2id, paths, config=config)
     model.build_graph()
     print("test data: {}".format(test_size))

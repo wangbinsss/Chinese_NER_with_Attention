@@ -196,8 +196,9 @@ class Att_BiLSTM_CRF(object):
         with tf.Session(config=self.config) as sess:
             self.logger.info('=========== testing ===========')
             saver.restore(sess, self.model_path)
-            label_list, seq_len_list = self.dev_one_epoch(sess, test)
-            self.evaluate(label_list, seq_len_list, test)
+            self.dev_one_epoch(sess, test)
+            # label_list, seq_len_list = self.dev_one_epoch(sess, test)
+            # self.evaluate(label_list, seq_len_list, test)
 
     def demo_one(self, sess, sent):
         """
@@ -208,7 +209,7 @@ class Att_BiLSTM_CRF(object):
         """
         label_list = []
         for seqs, labels, poss, _ in batch_yield(sent, self.batch_size, self.vocab, self.tag2label, self.pos2id,
-                                              shuffle=False):
+                                                 shuffle=False):
             label_list_, _ = self.predict_one_batch(sess, poss, seqs)
             label_list.extend(label_list_)
         label2tag = {}
@@ -248,13 +249,13 @@ class Att_BiLSTM_CRF(object):
 
             if step_num_ % 50 == 0:
                 self.logger.info('===========validation / test===========')
-                label_list_dev, seq_len_list_dev = self.dev_one_epoch(sess, dev)
+                # label_list_dev, seq_len_list_dev = self.dev_one_epoch(sess, dev)
                 # self.evaluate(label_list_dev, seq_len_list_dev, dev, epoch)
 
                 logits_, transition_params_ = sess.run([self.logits, self.transition_params],
                                                        feed_dict=feed_dict)
                 pred_list, label_list = self.make_mask(logits_, labels, sentence_legth, True,
-                                                  transition_params_)
+                                                       transition_params_)
                 all_list = np.concatenate((label_list, pred_list), axis=0)
                 all_list = np.unique(all_list)
                 target_names = [self.id2tag[i] for i in all_list]
@@ -264,41 +265,31 @@ class Att_BiLSTM_CRF(object):
                                                                                       loss_train, acc))
                 print(classification_report(label_list, pred_list, target_names=target_names, digits=4))
 
-    def get_feed_dict(self, seqs, poss, labels=None, lr=None, dropout=None):
-        """
-        :param seqs:
-        :param labels:
-        :param lr:
-        :param dropout:
-        :return: feed_dict
-        """
-        word_ids, seq_len_list = pad_sequences(seqs, pad_mark=0)
-        pos_ids, _ = pad_sequences(poss, pad_mark=0)
-        feed_dict = {self.word_ids: word_ids,
-                     self.pos_ids: pos_ids,
-                     self.sequence_lengths: seq_len_list}
-        if dropout is not None:
-            feed_dict[self.dropout_pl] = dropout
-        if labels is not None:
-            labels_, _ = pad_sequences(labels, pad_mark=0)
-            feed_dict[self.labels] = labels_
-        if lr is not None:
-            feed_dict[self.lr_pl] = lr
-        return feed_dict, seq_len_list
-
-    def dev_one_epoch(self, sess, dev):
+    def dev_one_epoch(self, sess, test):
         """
         :param sess:
         :param dev:
         :return:
         """
-        label_list, seq_len_list = [], []
-        for seqs, labels, poss, _ in batch_yield(dev, self.batch_size, self.vocab, self.tag2label, self.pos2id,
-                                              shuffle=False):
-            label_list_, seq_len_list_ = self.predict_one_batch(sess, poss, seqs)
-            label_list.extend(label_list_)
-            seq_len_list.extend(seq_len_list_)
-        return label_list, seq_len_list
+        # label_list, seq_len_list = [], []
+        seqs, labels, poss, sentence_legth = next(
+            batch_yield(test, self.batch_size, self.vocab, self.tag2label, self.pos2id, shuffle=False))
+        # label_list_, seq_len_list_ = self.predict_one_batch(sess, poss, seqs)
+        # label_list.extend(label_list_)
+        # seq_len_list.extend(seq_len_list_)
+
+        feed_dict, _ = self.get_feed_dict(seqs, poss, labels, self.lr, self.dropout_keep_prob)
+        l, logits_, transition_params_ = sess.run([self.loss, self.logits, self.transition_params],
+                                                  feed_dict=feed_dict)
+        # 获取真实序列、标签长度。
+        pred_list, label_list = self.make_mask(logits_, labels, sentence_legth, True, transition_params_)
+        all_list = np.concatenate((label_list, pred_list), axis=0)
+        all_list = np.unique(all_list)
+        target_names = [self.id2tag[i] for i in all_list]
+        acc = accuracy_score(label_list, pred_list)
+        print('test_accuracy: {:.4}  '.format(acc))
+        print(classification_report(label_list, pred_list, target_names=target_names, digits=4))
+        # return label_list, seq_len_list
 
     def predict_one_batch(self, sess, poss, seqs):
         """
@@ -333,6 +324,28 @@ class Att_BiLSTM_CRF(object):
             pred_list.extend(viterbi_seq)
             label_list.extend(lab[:seq_len])
         return pred_list, label_list
+
+    def get_feed_dict(self, seqs, poss, labels=None, lr=None, dropout=None):
+        """
+        :param seqs:
+        :param labels:
+        :param lr:
+        :param dropout:
+        :return: feed_dict
+        """
+        word_ids, seq_len_list = pad_sequences(seqs, pad_mark=0)
+        pos_ids, _ = pad_sequences(poss, pad_mark=0)
+        feed_dict = {self.word_ids: word_ids,
+                     self.pos_ids: pos_ids,
+                     self.sequence_lengths: seq_len_list}
+        if dropout is not None:
+            feed_dict[self.dropout_pl] = dropout
+        if labels is not None:
+            labels_, _ = pad_sequences(labels, pad_mark=0)
+            feed_dict[self.labels] = labels_
+        if lr is not None:
+            feed_dict[self.lr_pl] = lr
+        return feed_dict, seq_len_list
 
     def evaluate(self, label_list, seq_len_list, data, epoch=None):
         """
