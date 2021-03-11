@@ -75,9 +75,9 @@ def vocab_build(vocab_path, corpus_path, min_count):
     word2id['<UNK>'] = new_id
     word2id['<PAD>'] = 0
     print(word2id)
-    # print(len(word2id))
-    # with open(vocab_path, 'wb') as fw:
-    #     pickle.dump(word2id, fw)
+    print(len(word2id))
+    with open(vocab_path, 'wb') as fw:
+        pickle.dump(word2id, fw)
 
 
 def sentence2id(sent, word2id):
@@ -204,8 +204,6 @@ def get_embedding(path):
 
 
 if __name__ == '__main__':
-    # vocab_path = './data_path/weibo_data.pk'
-    # corpus_path = './data_path/weibo_train_data.txt'
     vocab_path = './data_path/word2id.pkl'
     corpus_path = './data_path/train_data'
     min_count = 0

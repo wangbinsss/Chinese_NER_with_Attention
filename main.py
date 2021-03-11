@@ -40,99 +40,98 @@ args = parser.parse_args()
 
 # get char embeddings
 word2id = read_dictionary(os.path.join('.', args.train_data, 'word2id.pkl'))
-print(word2id)
-#
-# if args.pretrain_embedding == 'random':
-#     embeddings = random_embedding(word2id, args.embedding_dim)
-#     pos_embeddings = random_pos_embedding(args.pos_dim)
-# else:
-#     embedding_path = os.path.join('.', args.train_data, 'embedding')
-#     embeddings, word2id, args.embedding_dim = get_embedding(embedding_path)
-#     args.hidden_dim = args.embedding_dim
-#     args.pos_dim = args.embedding_dim * 2
-#     pos_embeddings = random_pos_embedding(args.pos_dim)
-#
-# # read corpus and get training data
-# # if args.mode != 'demo':
-# train_path = os.path.join('.', args.train_data, 'weibo_train_data.txt')
-# test_path = os.path.join('.', args.test_data, 'weibo_test_data.txt')
-# train_data = read_corpus(train_path)
-# test_data = read_corpus(test_path)
-# test_size = len(test_data)
-#
-# # paths setting
-# paths = {}
-# timestamp = str(int(time.time())) if args.mode == 'train' else args.demo_model
-# output_path = os.path.join('.', args.train_data + "_save", timestamp)
-# if not os.path.exists(output_path):
-#     os.makedirs(output_path)
-# summary_path = os.path.join(output_path, "summaries")
-# paths['summary_path'] = summary_path
-# if not os.path.exists(summary_path):
-#     os.makedirs(summary_path)
-# model_path = os.path.join(output_path, "checkpoints/")
-# if not os.path.exists(model_path):
-#     os.makedirs(model_path)
-# ckpt_prefix = os.path.join(model_path, "model")
-# paths['model_path'] = ckpt_prefix
-# result_path = os.path.join(output_path, "results")
-# paths['result_path'] = result_path
-# if not os.path.exists(result_path):
-#     os.makedirs(result_path)
-# log_path = os.path.join(result_path, "log.txt")
-# paths['log_path'] = log_path
-# get_logger(log_path).info(str(args))
-#
-# # training model
-# if args.mode == 'train':
-#     model = Att_BiLSTM_CRF(args, embeddings, pos_embeddings, tag2label, pos2id, word2id, paths, config=config)
-#     model.build_graph()
-#     # train model on the whole training data
-#     print("train data: {}".format(len(train_data)))
-#     model.train(train=train_data, test=test_data)  # use test_data as the dev_data to see overfitting phenomena
-#
-# # testing model
-# elif args.mode == 'test':
-#     ckpt_file = tf.train.latest_checkpoint(model_path)
-#     print(ckpt_file)
-#     paths['model_path'] = ckpt_file
-#     model = Att_BiLSTM_CRF(args, embeddings, pos_embeddings, tag2label, pos2id, word2id, paths, config=config)
-#     model.build_graph()
-#     print("test data: {}".format(test_size))
-#     model.test(test_data)
-#
-# # demo
-# elif args.mode == 'demo':
-#     ckpt_file = tf.train.latest_checkpoint(model_path)
-#     print(ckpt_file)
-#     paths['model_path'] = ckpt_file
-#     model = Att_BiLSTM_CRF(args, embeddings, pos_embeddings, tag2label, pos2id, word2id, paths, config=config)
-#     model.build_graph()
-#     saver = tf.train.Saver()
-#     with tf.Session(config=config) as sess:
-#         print('============= demo =============')
-#         saver.restore(sess, ckpt_file)
-#         while (1):
-#             pos_ = []
-#             print('请输入您需要识别的语句 : （回车键退出）')
-#             demo_sent = input()
-#             if demo_sent == '' or demo_sent.isspace():
-#                 print('再见！')
-#                 break
-#             else:
-#                 demo_sent = list(demo_sent.strip())
-#                 sentence = "".join(demo_sent)
-#                 from jieba import posseg as pseg
-#
-#                 POS = pseg.cut(sentence)
-#                 for w in POS:
-#                     for i in range(len(w.word)):
-#                         w_flag = w.flag
-#                         if w_flag not in ["n", "ns", "nt", "nr", "ng", "nrfg", "nz", "nrt"]:
-#                             w_flag = "UNK"
-#                         pos_.append(w_flag)
-#                 demo_data = [(demo_sent, ['O'] * len(demo_sent), pos_)]
-#                 tag = model.demo_one(sess, demo_data)
-#                 print(tag, demo_sent)
-#                 PER, LOC, ORG = get_entity(tag, demo_sent)
-#                 print('PER: {}\nLOC: {}\nORG: {}'.format(PER, LOC, ORG))
+
+if args.pretrain_embedding == 'random':
+    embeddings = random_embedding(word2id, args.embedding_dim)
+    pos_embeddings = random_pos_embedding(args.pos_dim)
+else:
+    embedding_path = os.path.join('.', args.train_data, 'embedding')
+    embeddings, word2id, args.embedding_dim = get_embedding(embedding_path)
+    args.hidden_dim = args.embedding_dim
+    args.pos_dim = args.embedding_dim * 2
+    pos_embeddings = random_pos_embedding(args.pos_dim)
+
+# read corpus and get training data
+# if args.mode != 'demo':
+train_path = os.path.join('.', args.train_data, 'weibo_train_data.txt')
+test_path = os.path.join('.', args.test_data, 'weibo_test_data.txt')
+train_data = read_corpus(train_path)
+test_data = read_corpus(test_path)
+test_size = len(test_data)
+
+# paths setting
+paths = {}
+timestamp = str(int(time.time())) if args.mode == 'train' else args.demo_model
+output_path = os.path.join('.', args.train_data + "_save", timestamp)
+if not os.path.exists(output_path):
+    os.makedirs(output_path)
+summary_path = os.path.join(output_path, "summaries")
+paths['summary_path'] = summary_path
+if not os.path.exists(summary_path):
+    os.makedirs(summary_path)
+model_path = os.path.join(output_path, "checkpoints/")
+if not os.path.exists(model_path):
+    os.makedirs(model_path)
+ckpt_prefix = os.path.join(model_path, "model")
+paths['model_path'] = ckpt_prefix
+result_path = os.path.join(output_path, "results")
+paths['result_path'] = result_path
+if not os.path.exists(result_path):
+    os.makedirs(result_path)
+log_path = os.path.join(result_path, "log.txt")
+paths['log_path'] = log_path
+get_logger(log_path).info(str(args))
+
+# training model
+if args.mode == 'train':
+    model = Att_BiLSTM_CRF(args, embeddings, pos_embeddings, tag2label, pos2id, word2id, paths, config=config)
+    model.build_graph()
+    # train model on the whole training data
+    print("train data: {}".format(len(train_data)))
+    model.train(train=train_data, test=test_data)  # use test_data as the dev_data to see overfitting phenomena
+
+# testing model
+elif args.mode == 'test':
+    ckpt_file = tf.train.latest_checkpoint(model_path)
+    print(ckpt_file)
+    paths['model_path'] = ckpt_file
+    model = Att_BiLSTM_CRF(args, embeddings, pos_embeddings, tag2label, pos2id, word2id, paths, config=config)
+    model.build_graph()
+    print("test data: {}".format(test_size))
+    model.test(test_data)
+
+# demo
+elif args.mode == 'demo':
+    ckpt_file = tf.train.latest_checkpoint(model_path)
+    print(ckpt_file)
+    paths['model_path'] = ckpt_file
+    model = Att_BiLSTM_CRF(args, embeddings, pos_embeddings, tag2label, pos2id, word2id, paths, config=config)
+    model.build_graph()
+    saver = tf.train.Saver()
+    with tf.Session(config=config) as sess:
+        print('============= demo =============')
+        saver.restore(sess, ckpt_file)
+        while (1):
+            pos_ = []
+            print('请输入您需要识别的语句 : （回车键退出）')
+            demo_sent = input()
+            if demo_sent == '' or demo_sent.isspace():
+                print('再见！')
+                break
+            else:
+                demo_sent = list(demo_sent.strip())
+                sentence = "".join(demo_sent)
+                from jieba import posseg as pseg
+
+                POS = pseg.cut(sentence)
+                for w in POS:
+                    for i in range(len(w.word)):
+                        w_flag = w.flag
+                        if w_flag not in ["n", "ns", "nt", "nr", "ng", "nrfg", "nz", "nrt"]:
+                            w_flag = "UNK"
+                        pos_.append(w_flag)
+                demo_data = [(demo_sent, ['O'] * len(demo_sent), pos_)]
+                tag = model.demo_one(sess, demo_data)
+                print(tag, demo_sent)
+                PER, LOC, ORG = get_entity(tag, demo_sent)
+                print('PER: {}\nLOC: {}\nORG: {}'.format(PER, LOC, ORG))
