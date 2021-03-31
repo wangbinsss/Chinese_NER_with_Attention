@@ -47,14 +47,15 @@ if args.pretrain_embedding == 'random':
 else:
     embedding_path = os.path.join('.', args.train_data, 'embedding')
     embeddings, word2id, args.embedding_dim = get_embedding(embedding_path)
+
     args.hidden_dim = args.embedding_dim
     args.pos_dim = args.embedding_dim * 2
     pos_embeddings = random_pos_embedding(args.pos_dim)
 
 # read corpus and get training data
 # if args.mode != 'demo':
-train_path = os.path.join('.', args.train_data, 'weibo_train_data.txt')
-test_path = os.path.join('.', args.test_data, 'weibo_test_data.txt')
+train_path = os.path.join('.', args.train_data, 'train_data.txt')
+test_path = os.path.join('.', args.test_data, 'test_data.txt')
 train_data = read_corpus(train_path)
 test_data = read_corpus(test_path)
 test_size = len(test_data)
